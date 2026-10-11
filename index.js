@@ -3,17 +3,16 @@ app = express()
 
 const cors = require("cors")
 
-var url = require('url');
-var dt = require('./date-time');
-
 const port = process.env.PORT || 3000
-const majorVersion = 1
-const minorVersion = 3
+const majorVersion = 2
+const minorVersion = 0
 
-// Use Express to publish static HTML, CSS, and JavaScript files that run in the browser. 
+// Use Express to publish static HTML, CSS, and JavaScript files that run in the browser.
+app.use(express.json())
 app.use(express.static(__dirname + '/static'))
 app.use(cors({ origin: '*' }))
 
+// ----------   GENERAL SERVER ROUTES   ----------
 // The app.get functions below are being processed in Node.js running on the server.
 // Implement a custom About page.
 app.get('/about', (request, response) => {
@@ -34,111 +33,166 @@ app.get('/api/ping', (request, response) => {
 	response.send('ping response')
 })
 
-// Return the value of 2 plus 2.
-app.get('/2plus2', (request, response) => {
-	console.log('Calling "/2plus2" on the Node.js server.')
-	response.type('text/plain')
-	response.send('4')
+// ----------   CUSTOM SERVER ROUTES   ----------
+
+app.post('/api/calculate/blood-pressure', (request, response) => {
+	const { systolic, diastolic } = request.body;
+
+	const validationError = validateBloodPressure(systolic, diastolic);
+	if (validationError) {
+		response.status(400).json({ error: validationError });
+		return;
+	}
+
+	let bloodPressureCategory = ''
+	if (systolic < 120 && diastolic < 80) {
+		bloodPressureCategory = 'Normal'
+	}
+	else if (systolic < 130 && diastolic < 80) {
+		bloodPressureCategory = 'Elevated'
+	}
+	else if (systolic < 140 || diastolic < 90) {
+		bloodPressureCategory = 'High Blood Pressure (Hypertension) Stage 1'
+	}
+	else if (systolic >= 180 || diastolic >= 120) {
+		bloodPressureCategory = 'Hypertensive Crisis (Consult your doctor immediately)'
+	}
+	else if (systolic >= 140 || diastolic >= 90) {
+		bloodPressureCategory = 'High Blood Pressure (Hypertension) Stage 2'
+	}
+	else {
+		bloodPressureCategory = 'Uncategorized'
+	}
+	
+	response.json({ category: bloodPressureCategory })
 })
-
-// Add x and y which are both passed in on the URL. 
-app.get('/add-two-integers', (request, response) => {
-	console.log('Calling "/add-two-integers" on the Node.js server.')
-	var inputs = url.parse(request.url, true).query
-	let x = parseInt(inputs.x)
-	let y = parseInt(inputs.y)
-	let sum = x + y
-	response.type('text/plain')
-	response.send(sum.toString())
-})
-
-// Template for calculating BMI using height in feet/inches and weight in pounds.
-app.get('/calculate-bmi', (request, response) => {
-	console.log('Calling "/calculate-bmi" on the Node.js server.')
-	var inputs = url.parse(request.url, true).query
-	const heightFeet = parseInt(inputs.feet)
-	const heightInches = parseInt(inputs.inches)
-	const weight = parseInt(inputs.lbs)
-
-	console.log('Height:' + heightFeet + '\'' + heightInches + '\"')
-	console.log('Weight:' + weight + ' lbs.')
-
-	// Todo: Implement unit conversions and BMI calculations.
-	// Todo: Return BMI instead of Todo message.
-
-	response.type('text/plain')
-	response.send('Todo: Implement "/calculate-bmi"')
-})
-
-// Test a variety of functions.
-app.get('/test', (request, response) => {
-    // Write the request to the log. 
-    console.log(request);
-
-    // Return HTML.
-    response.writeHead(200, {'Content-Type': 'text/html'});
-    response.write('<h3>Testing Function</h3>')
-
-    // Access function from a separate JavaScript module.
-    response.write("The date and time are currently: " + dt.myDateTime() + "<br><br>");
-
-    // Show the full url from the request. 
-    response.write("req.url="+request.url+"<br><br>");
-
-    // Suggest adding something tl the url so that we can parse it. 
-    response.write("Consider adding '/test?year=2017&month=July' to the URL.<br><br>");
-    
-	// Parse the query string for values that are being passed on the URL.
-	var q = url.parse(request.url, true).query;
-    var txt = q.year + " " + q.month;
-    response.write("txt="+txt);
-
-    // Close the response
-    response.end('<h3>The End.</h3>');
-})
-
-// Return Batman as JSON.
-const batMan = {
-	"firstName":"Bruce",
-	"lastName":"Wayne",
-	"preferredName":"Batman",
-	"email":"darkknight@lewisu.edu",
-	"phoneNumber":"800-bat-mann",
-	"city":"Gotham",
-	"state":"NJ",
-	"zip":"07101",
-	"lat":"40.73",
-	"lng":"-74.17",
-	"favoriteHobby":"Flying",
-	"class":"cpsc-24700-001",
-	"room":"AS-104-A",
-	"startTime":"2 PM CT",
-	"seatNumber":"",
-	"inPerson":[
-		"Monday",
-		"Wednesday"
-	],
-	"virtual":[
-		"Friday"
-	]
+function validateBloodPressure(systolic, diastolic) {
+	// TODO: Implement Validation Logic
+	return null; // Return null if valid, or an error message string if invalid
 }
 
-app.get('/batman', (request, response) => {
-	console.log('Calling "/batman" on the Node.js server.')
-	response.type('application/json')
-	response.send(JSON.stringify(batMan))
+app.post('/api/calculate/bmi', (request, response) => {
+	const { heightFeet, heightInches, weightPounds } = request.body
+
+	const validationError = validateBMICalculations(heightFeet, heightInches, weightPounds);
+	if (validationError) {
+		response.status(400).json({ error: validationError });
+		return;
+	}
+
+	const totalHeightInches = (heightFeet * 12) + heightInches
+	const bmi = (weightPounds / (totalHeightInches * totalHeightInches)) * 703
+	const roundedBmi = parseFloat(bmi.toFixed(2))
+
+	let bmiCategory = ''
+	if (roundedBmi < 18.5) {
+		bmiCategory = 'Underweight'
+	}
+	else if (roundedBmi < 24.9) {
+		bmiCategory = 'Normal weight'
+	}
+	else if (roundedBmi < 29.9) {
+		bmiCategory = 'Overweight'
+	}
+	else {
+		bmiCategory = 'Obesity'
+	}
+
+	response.json({ bmi: roundedBmi, category: bmiCategory });
 })
+function validateBMICalculations(heightFeet, heightInches, weightPounds) {
+	// TODO: Implement Validation Logic
+	return null; // Return null if valid, or an error message string if invalid
+}
 
-// Load your JSON data
-const favoritePlaces = require('./FavoritePlaces.json');
+app.post('/api/calculate/risk-score', (request, response) => {
+	const { age, bmiCategory, bloodPressureCategory, familyDiseaseList } = request.body
 
-// Create a route that serves the JSON data
-app.get('/api/favorite-places', (req, res) => {
-  res.json(favoritePlaces);
-});
+	const validationError = validateRiskScoreCalculations(age, bmi, bloodPressureCategory, familyDiseaseList);
+	if (validationError) {
+		response.status(400).json({ error: validationError });
+		return;
+	}
 
+	let ageRiskScore = 0
+	if (age < 30) {
+		ageRiskScore += 0
+	}
+	else if (age < 45) {
+		ageRiskScore += 10
+	}
+	else if (age < 60) {
+		ageRiskScore += 20
+	}
+	else {
+		ageRiskScore += 30
+	}
 
+	let bmiRiskScore = 0
+	if (bmiCategory === 'Underweight') {
+		bmiRiskScore += 0 // NOTE: Underweight is not considered a risk factor in this scoring system
+	}
+	else if (bmiCategory === 'Normal weight') {
+		bmiRiskScore += 0
+	}
+	else if (bmiCategory === 'Overweight') {
+		bmiRiskScore += 30
+	}
+	else if (bmiCategory === 'Obesity') {
+		bmiRiskScore += 75
+	}
 
+	let bloodPressureRiskScore = 0
+	if (bloodPressureCategory === 'Normal') {
+		bloodPressureRiskScore += 0
+	}
+	else if (bloodPressureCategory === 'Elevated') {
+		bloodPressureRiskScore += 15
+	}
+	else if (bloodPressureCategory === 'High Blood Pressure (Hypertension) Stage 1') {
+		bloodPressureRiskScore += 30
+	}
+	else if (bloodPressureCategory === 'High Blood Pressure (Hypertension) Stage 2') {
+		bloodPressureRiskScore += 75
+	}
+	else if (bloodPressureCategory === 'Hypertensive Crisis (Consult your doctor immediately)') {
+		bloodPressureRiskScore += 100
+	}
+
+	let familyDiseaseRiskScore = 0
+	if (familyDiseaseList.includes('diabetes')) {
+		familyDiseaseRiskScore += 10
+	}
+	if (familyDiseaseList.includes('cancer')) {
+		familyDiseaseRiskScore += 10
+	}
+	if (familyDiseaseList.includes("Alzheimer's")) {
+		familyDiseaseRiskScore += 10
+	}
+
+	let riskScore = ageRiskScore + bmiRiskScore + bloodPressureRiskScore + familyDiseaseRiskScore
+	let riskCategory = ''
+	if (riskScore <= 20) {
+		riskCategory = 'low risk'
+	}
+	else if (riskScore <= 50) {
+		riskCategory = 'moderate risk'
+	}
+	else if (riskScore <= 75) {
+		riskCategory = 'high risk'
+	}
+	else {
+		riskCategory = 'uninsurable'
+	}
+
+	response.json({ riskScore: riskScore, category: riskCategory, ageRiskScore: ageRiskScore, bmiRiskScore: bmiRiskScore, bloodPressureRiskScore: bloodPressureRiskScore, familyDiseaseRiskScore: familyDiseaseRiskScore })
+})
+function validateRiskScoreCalculations(age, bmiCategory, bloodPressureCategory, familyDiseaseList) {
+	// TODO: Implement Validation Logic
+	return null; // Return null if valid, or an error message string if invalid
+}
+
+// ----------   ERROR HANDLING ROUTES   ----------
 // Custom 404 page.
 app.use((request, response) => {
   response.type('text/plain')
