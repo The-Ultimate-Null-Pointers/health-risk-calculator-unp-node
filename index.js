@@ -10,7 +10,9 @@ const minorVersion = 0
 // Use Express to publish static HTML, CSS, and JavaScript files that run in the browser.
 app.use(express.json())
 app.use(express.static(__dirname + '/static'))
-app.use(cors({ origin: '*' }))
+
+// Add sites that can speak to the server, NEED TO ADD AZURE WEBSITE
+app.use(cors({ origin: 'http://localhost:3000' }))
 
 // ----------   GENERAL SERVER ROUTES   ----------
 // The app.get functions below are being processed in Node.js running on the server.
@@ -30,7 +32,7 @@ app.get('/version', (request, response) => {
 app.get('/api/ping', (request, response) => {
 	console.log('Calling "/api/ping"')
 	response.type('text/plain')
-	response.send('ping response')
+	response.send(`ping response v${majorVersion}.${minorVersion}`)
 })
 
 // ----------   CUSTOM SERVER ROUTES   ----------
