@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>HRC Server Test Page</title>
+</head>
+<body>
+	<h1>HRC Server Test Page</h1>
+	<!-- Test ping -->
+	<p>
+		<button onclick="testEndpoint('/api/ping', 'pingResult')">GET /api/ping</button>
+		Expected: 200, version text<br />
+		<code id="pingResult"></code>
+	</p>
+
+	<!-- Function to run all the different tests, written by Claude AI and verified/studied by student -->
+	<script>
+		async function testEndpoint(path, outputId) {
+			const output = document.getElementById(outputId)
+			output.textContent = 'Calling ' + path + '...'
+			const start = performance.now()
+
+			try {
+				const response = await fetch(path)
+				const text = await response.text()
+				const ms = Math.round(performance.now() - start)
+				output.textContent = 'Status ' + response.status + ' | ' + ms + ' ms | ' + text
+			} catch (error) {
+				output.textContent = 'Request failed: ' + error.message
+			}
+		}
+	</script>
+
+</body>
+</html>

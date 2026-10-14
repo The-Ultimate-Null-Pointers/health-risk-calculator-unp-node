@@ -4,30 +4,22 @@ app = express()
 const cors = require("cors")
 
 const port = process.env.PORT || 3000
-const majorVersion = 2
-const minorVersion = 0
+const majorVersion = 0
+const minorVersion = 1
 
 // Use Express to publish static HTML, CSS, and JavaScript files that run in the browser.
 app.use(express.json())
-app.use(express.static(__dirname + '/static'))
+app.use(express.static(__dirname + '/public'))
 
 // Add sites that can speak to the server, NEED TO ADD AZURE WEBSITE
-app.use(cors({ origin: 'http://localhost:3000' }))
+app.use(cors({ origin: [
+	'http://localhost:3000', 
+	'https://health-risk-calculator-unp-node-f5hygtdhemhxc6ef.centralus-01.azurewebsites.net/'
+	]
+}))
 
 // ----------   GENERAL SERVER ROUTES   ----------
 // The app.get functions below are being processed in Node.js running on the server.
-// Implement a custom About page.
-app.get('/about', (request, response) => {
-	console.log('Calling "/about" on the Node.js server.')
-	response.type('text/plain')
-	response.send('About Node.js on Azure Template.')
-})
-
-app.get('/version', (request, response) => {
-	console.log('Calling "/version" on the Node.js server.')
-	response.type('text/plain')
-	response.send('Version: '+majorVersion+'.'+minorVersion)
-})
 
 app.get('/api/ping', (request, response) => {
 	console.log('Calling "/api/ping"')
@@ -187,7 +179,8 @@ app.post('/api/calculate/risk-score', (request, response) => {
 		riskCategory = 'uninsurable'
 	}
 
-	response.json({ riskScore: riskScore, category: riskCategory, ageRiskScore: ageRiskScore, bmiRiskScore: bmiRiskScore, bloodPressureRiskScore: bloodPressureRiskScore, familyDiseaseRiskScore: familyDiseaseRiskScore })
+	response.json({ riskScore: riskScore, category: riskCategory, ageRiskScore: ageRiskScore, bmiRiskScore: bmiRiskScore, 
+					bloodPressureRiskScore: bloodPressureRiskScore, familyDiseaseRiskScore: familyDiseaseRiskScore })
 })
 function validateRiskScoreCalculations(age, bmiCategory, bloodPressureCategory, familyDiseaseList) {
 	// TODO: Implement Validation Logic
