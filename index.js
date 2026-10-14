@@ -14,7 +14,7 @@ app.use(express.static(__dirname + '/public'))
 // Add sites that can speak to the server, NEED TO ADD AZURE WEBSITE
 app.use(cors({ origin: [
 	'http://localhost:3000', 
-	'https://health-risk-calculator-unp-node-f5hygtdhemhxc6ef.centralus-01.azurewebsites.net/'
+	'https://victorious-wave-01c3ffd10.4.azurestaticapps.net/'
 	]
 }))
 
