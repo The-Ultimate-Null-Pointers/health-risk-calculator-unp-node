@@ -14,7 +14,7 @@ app.use(express.static(__dirname + '/public'))
 // Add sites that can speak to the server, NEED TO ADD AZURE WEBSITE
 app.use(cors({ origin: [
 	'http://localhost:3000', 
-	'https://victorious-wave-01c3ffd10.4.azurestaticapps.net/'
+	'https://victorious-wave-01c3ffd10.4.azurestaticapps.net'
 	]
 }))
 
